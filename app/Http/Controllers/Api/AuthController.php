@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
+use App\Models\VerificationCode;
 
 class AuthController extends Controller
 {
@@ -21,6 +24,18 @@ class AuthController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+        // Verify that the email was verified with OTP
+        $verification = VerificationCode::where('email', $request->email)
+            ->where('is_verified', true)
+            ->first();
+
+        if (!$verification) {
+            return response()->json(['message' => 'Email verification required.'], 403);
+        }
+
+        // Optional: delete verification after use or mark it as used
+        $verification->delete();
 
         $user = User::create([
             'name' => $request->name,
@@ -168,5 +183,68 @@ class AuthController extends Controller
             'message' => 'Profile updated successfully',
             'user' => $user->fresh(),
         ]);
+    }
+
+    /**
+     * Send OTP to user's email.
+     */
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255'
+        ]);
+
+        // Check if user already exists
+        if (User::where('email', $request->email)->exists()) {
+            return response()->json(['message' => 'Email already registered.'], 422);
+        }
+
+        $code = rand(100000, 999999);
+        $expiresAt = Carbon::now()->addMinutes(10);
+
+        VerificationCode::updateOrCreate(
+            ['email' => $request->email],
+            [
+                'code' => $code,
+                'expires_at' => $expiresAt,
+                'is_verified' => false
+            ]
+        );
+
+        // Send Email
+        try {
+            Mail::raw("Your verification code is: {$code}. It expires in 10 minutes.", function ($message) use ($request) {
+                $message->to($request->email)
+                    ->subject('Signup Verification Code');
+            });
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to send OTP. Please check your email configuration.', 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json(['message' => 'OTP sent successfully.']);
+    }
+
+    /**
+     * Verify OTP.
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6'
+        ]);
+
+        $verification = VerificationCode::where('email', $request->email)
+            ->where('code', $request->code)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
+        if (!$verification) {
+            return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+        }
+
+        $verification->update(['is_verified' => true]);
+
+        return response()->json(['message' => 'Email verified successfully.']);
     }
 }
