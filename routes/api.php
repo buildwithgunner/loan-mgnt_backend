@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/applications', [DashboardController::class, 'applications']);
     Route::post('/dashboard/applications', [DashboardController::class, 'submitApplication']);
     Route::post('/dashboard/applications/upload-doc/{id}', [DashboardController::class, 'uploadDocument']);
+    Route::post('/dashboard/documents/upload-id', [DashboardController::class, 'uploadIdDocument']);
     Route::get('/dashboard/documents', [DashboardController::class, 'documents']);
     Route::get('/dashboard/notifications', [DashboardController::class, 'notifications']);
     Route::post('/dashboard/notifications/{id}/read', [DashboardController::class, 'markNotificationRead']);

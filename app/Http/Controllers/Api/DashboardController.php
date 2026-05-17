@@ -193,6 +193,32 @@ class DashboardController extends Controller
     }
 
     /**
+     * Upload a global document for a user (like an ID card).
+     */
+    public function uploadIdDocument(Request $request)
+    {
+        $request->validate([
+            'document' => 'required|file|max:10240',
+            'category' => 'required|string'
+        ]);
+
+        $file = $request->file('document');
+        
+        $path = $file->store('documents/users/' . $request->user()->id, 'public');
+
+        $document = $request->user()->documents()->create([
+            'application_id' => null,
+            'name' => $file->getClientOriginalName(),
+            'path' => $path,
+            'category' => $request->category,
+            'type' => $file->getClientOriginalExtension(),
+            'size' => round($file->getSize() / 1024 / 1024, 2) . ' MB',
+        ]);
+
+        return response()->json($document);
+    }
+
+    /**
      * Get all referrals for the user.
      */
     public function referrals(Request $request)

@@ -375,7 +375,7 @@ class AdminController extends Controller
      */
     public function getUserProfile($id)
     {
-        $user = User::with(['applications.documents', 'applications.disbursements'])->findOrFail($id);
+        $user = User::with(['documents', 'applications.documents', 'applications.disbursements'])->findOrFail($id);
         
         return response()->json([
             'user' => $user
