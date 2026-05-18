@@ -458,4 +458,27 @@ class AdminController extends Controller
             'lead' => $lead
         ]);
     }
+    /**
+     * Get all uploaded documents.
+     */
+    public function getDocuments()
+    {
+        $documents = \App\Models\Document::with(['user', 'application'])->orderBy('created_at', 'desc')->get();
+        return response()->json([
+            'documents' => $documents->map(function ($doc) {
+                return [
+                    'id' => $doc->id,
+                    'name' => $doc->name,
+                    'path' => $doc->path,
+                    'category' => $doc->category,
+                    'type' => $doc->type,
+                    'size' => $doc->size,
+                    'created_at' => $doc->created_at,
+                    'user' => $doc->user ? $doc->user->name : 'Unknown User',
+                    'user_email' => $doc->user ? $doc->user->email : 'N/A',
+                    'application_id' => $doc->application_id
+                ];
+            })
+        ]);
+    }
 }
