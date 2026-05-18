@@ -21,6 +21,7 @@ Route::post('/admin/register', [AuthController::class, 'adminRegister']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::get('/settings', [AdminController::class, 'getSettings']);
 Route::post('/leads/submit', [AdminController::class, 'publicSubmitLead']);
+Route::get('/admin/documents/{id}/view', [AdminController::class, 'viewDocument']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
