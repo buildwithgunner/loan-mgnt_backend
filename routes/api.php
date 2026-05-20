@@ -62,6 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
         Route::get('/leads', [AdminController::class, 'getLeads']);
         Route::post('/leads', [AdminController::class, 'createLead']);
+        Route::put('/leads/{id}/status', [AdminController::class, 'updateLeadStatus']);
+        Route::delete('/leads/{id}', [AdminController::class, 'deleteLead']);
         Route::get('/documents', [AdminController::class, 'getDocuments']);
         Route::get('/settings', [AdminController::class, 'getSettings']);
         Route::put('/settings', [AdminController::class, 'updateSettings']);

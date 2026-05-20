@@ -31,6 +31,7 @@ class Application extends Model
         'bank_name',
         'account_name',
         'account_number',
+        'routing_number',
     ];
 
     protected $casts = [

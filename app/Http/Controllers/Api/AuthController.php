@@ -60,6 +60,34 @@ class AuthController extends Controller
             'loan_intent' => $request->loan_intent,
         ]);
 
+        try {
+            $adminEmail = 'infoblackwolvesacc@blackwolvesacquisitionllc.com';
+            $html = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #c5a059; border-radius: 15px;'>
+                    <h2 style='color: #05101c; border-bottom: 2px solid #c5a059; padding-bottom: 10px;'>New Client Account Registered</h2>
+                    <p style='margin: 10px 0;'><strong>Client Name:</strong> {$user->name}</p>
+                    <p style='margin: 10px 0;'><strong>Email Address:</strong> {$user->email}</p>
+                    <p style='margin: 10px 0;'><strong>Phone Number:</strong> " . ($user->phone ?? 'N/A') . "</p>
+                    <p style='margin: 10px 0;'><strong>Estimated FICO Score:</strong> " . ($user->estimated_fico ?? 'N/A') . "</p>
+                    <p style='margin: 10px 0;'><strong>Estimated Net Worth:</strong> " . ($user->estimated_net_worth ?? 'N/A') . "</p>
+                    <p style='margin: 20px 0 5px 0;'><strong>Strategic Intent:</strong></p>
+                    <div style='background: #f9f7f2; padding: 15px; border-left: 4px solid #c5a059; border-radius: 5px; color: #333;'>
+                        " . nl2br(e($user->loan_intent ?? 'No strategic intent provided at genesis.')) . "
+                    </div>
+                    <p style='font-size: 11px; color: #888; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;'>
+                        Sent from Black Wolves Acquisition LLC System Protocol.
+                    </p>
+                </div>
+            ";
+            
+            Mail::html($html, function ($message) use ($user, $adminEmail) {
+                $message->to($adminEmail)
+                    ->subject("New User Signup: {$user->name} - Black Wolves Acquisition");
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send registration email notification: ' . $e->getMessage());
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

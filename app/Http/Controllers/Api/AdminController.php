@@ -17,7 +17,9 @@ class AdminController extends Controller
      */
     public function getSettings()
     {
-        $settings = SiteSetting::all()->pluck('value', 'key');
+        $settings = \Illuminate\Support\Facades\Cache::remember('site_settings', 86400, function () {
+            return SiteSetting::all()->pluck('value', 'key');
+        });
         return response()->json([
             'settings' => $settings
         ]);
@@ -33,6 +35,8 @@ class AdminController extends Controller
         foreach ($settings as $key => $value) {
             SiteSetting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
+
+        \Illuminate\Support\Facades\Cache::forget('site_settings');
 
         return response()->json([
             'message' => 'Settings updated successfully'
@@ -160,6 +164,7 @@ class AdminController extends Controller
                         'bank_name' => $app->bank_name,
                         'account_name' => $app->account_name,
                         'account_number' => $app->account_number,
+                        'routing_number' => $app->routing_number,
                     ],
                     'form_data' => $app->form_data,
                 ];
@@ -453,9 +458,48 @@ class AdminController extends Controller
             'status' => 'new_inquiry',
         ]);
 
+        // Dispatch background job for sending email notification to admin asynchronously
+        try {
+            \App\Jobs\SendLeadInquiryEmail::dispatch($lead);
+        } catch (\Exception $e) {
+            \Log::error('Failed to dispatch lead email job: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Your inquiry has been received. Our team will contact you shortly.',
             'lead' => $lead
+        ]);
+    }
+
+    /**
+     * Update the status of an existing lead.
+     */
+    public function updateLeadStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:interested,contacted,converted,new_inquiry'
+        ]);
+
+        $lead = \App\Models\Lead::findOrFail($id);
+        $lead->status = $request->status;
+        $lead->save();
+
+        return response()->json([
+            'message' => 'Lead status updated successfully',
+            'lead' => $lead
+        ]);
+    }
+
+    /**
+     * Delete an existing lead.
+     */
+    public function deleteLead($id)
+    {
+        $lead = \App\Models\Lead::findOrFail($id);
+        $lead->delete();
+
+        return response()->json([
+            'message' => 'Lead deleted successfully'
         ]);
     }
     /**

@@ -12,6 +12,7 @@ class Lead extends Model
         'email',
         'phone',
         'loan_type',
+        'purpose',
         'interest_code',
         'status'
     ];

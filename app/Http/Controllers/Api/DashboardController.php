@@ -90,6 +90,7 @@ class DashboardController extends Controller
                 'bank_name' => $app->bank_name,
                 'account_name' => $app->account_name,
                 'account_number' => $app->account_number,
+                'routing_number' => $app->routing_number,
                 'documents' => $app->documents,
                 'created_at' => $app->created_at,
             ];
@@ -272,6 +273,7 @@ class DashboardController extends Controller
             'bank_name'      => 'required|string|max:255',
             'account_name'   => 'required|string|max:255',
             'account_number' => 'required|string|max:255',
+            'routing_number' => 'required|string|max:255',
         ]);
 
         // Look up by ID directly — the route is already auth-protected.
@@ -284,7 +286,7 @@ class DashboardController extends Controller
             $application = Application::findOrFail($id);
         }
 
-        $application->update($request->only(['bank_name', 'account_name', 'account_number']));
+        $application->update($request->only(['bank_name', 'account_name', 'account_number', 'routing_number']));
 
         return response()->json([
             'message'     => 'Bank details updated successfully',
